@@ -88,4 +88,14 @@ class Order extends Model
     {
         return $query->whereDate('created_at', $date);
     }
+
+    public function markAsCompleted(): bool
+    {
+        return $this->update(['status' => OrderStatus::COMPLETED]);
+    }
+
+    public function markAsCancelled(): bool
+    {
+        return $this->update(['status' => OrderStatus::CANCELLED]);
+    }
 }

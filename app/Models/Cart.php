@@ -34,12 +34,10 @@ class Cart extends Model
 
     public function getTotal(): string
     {
-        $total = '0';
-        foreach ($this->items as $item) {
-            $total = bcadd($total, $item->getSubtotal(), 2);
-        }
-
-        return $total;
+        return $this->items->reduce(
+            fn (string $total, CartItem $item) => bcadd($total, $item->getSubtotal(), 2),
+            '0'
+        );
     }
 
     protected function itemCount(): Attribute
