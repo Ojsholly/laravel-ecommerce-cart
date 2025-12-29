@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\OrderStatus;
 use App\Exceptions\EmptyCartException;
 use App\Exceptions\InsufficientStockException;
+use App\Jobs\SendLowStockNotification;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -91,7 +92,7 @@ class CheckoutService
         $product->decrement('stock_quantity', $quantity);
 
         if ($product->fresh()->isLowStock()) {
-            // Dispatch low stock notification job here in Phase 4
+            SendLowStockNotification::dispatch($product);
         }
     }
 }
