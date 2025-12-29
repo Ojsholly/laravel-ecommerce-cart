@@ -21,7 +21,7 @@ new #[Layout('components.layouts.app')] class extends Component {
         }
 
         $this->priceService = app(PriceCalculationService::class);
-        $this->pricing = $this->priceService->calculateOrderPricing($this->cart->items->toArray());
+        $this->pricing = $this->priceService->calculateOrderPricing($this->cart->items);
     }
 
     public function placeOrder(): void

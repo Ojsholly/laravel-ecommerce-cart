@@ -18,7 +18,7 @@ class SendLowStockNotification implements ShouldQueue
 
     public function handle(): void
     {
-        $adminEmail = config('mail.admin_email', env('MAIL_ADMIN_EMAIL'));
+        $adminEmail = config('mail.admin_email');
 
         if (! $adminEmail) {
             return;
