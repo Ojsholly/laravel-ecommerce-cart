@@ -30,3 +30,8 @@ boost.json
 .mcp.json
 /.junie
 opencode.json
+
+# IDE/AI Assistant directories
+/.cursor
+/.gemini
+/.github/copilot-instructions.md
