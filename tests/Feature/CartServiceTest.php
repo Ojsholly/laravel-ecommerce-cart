@@ -17,7 +17,7 @@ test('can create cart for user', function () {
 
     expect($cart)->not->toBeNull()
         ->and($cart->user_id)->toBe($this->user->id);
-    
+
     $this->assertDatabaseHas('carts', ['user_id' => $this->user->id]);
 });
 
@@ -36,7 +36,7 @@ test('can add product to cart', function () {
 
     expect($cartItem->quantity)->toBe(2)
         ->and($cartItem->product_id)->toBe($product->id);
-    
+
     $this->assertDatabaseHas('cart_items', [
         'cart_id' => $cart->id,
         'product_id' => $product->id,
@@ -95,7 +95,7 @@ test('can clear cart', function () {
     $product1 = Product::factory()->create(['stock_quantity' => 10]);
     $product2 = Product::factory()->create(['stock_quantity' => 10]);
     $cart = $this->cartService->getOrCreateCart($this->user);
-    
+
     $this->cartService->addProduct($cart, $product1, 2);
     $this->cartService->addProduct($cart, $product2, 3);
 
@@ -108,7 +108,7 @@ test('cart calculates total correctly', function () {
     $product1 = Product::factory()->create(['price' => '10.00', 'stock_quantity' => 10]);
     $product2 = Product::factory()->create(['price' => '20.00', 'stock_quantity' => 10]);
     $cart = $this->cartService->getOrCreateCart($this->user);
-    
+
     $this->cartService->addProduct($cart, $product1, 2);
     $this->cartService->addProduct($cart, $product2, 1);
 

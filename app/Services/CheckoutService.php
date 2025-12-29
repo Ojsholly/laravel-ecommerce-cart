@@ -13,6 +13,9 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Service for handling checkout operations and order creation.
+ */
 class CheckoutService
 {
     public function __construct(
@@ -20,6 +23,12 @@ class CheckoutService
         private CartService $cartService
     ) {}
 
+    /**
+     * Process checkout for a cart and create an order.
+     *
+     * @throws EmptyCartException
+     * @throws InsufficientStockException
+     */
     public function processCheckout(Cart $cart): Order
     {
         return DB::transaction(function () use ($cart) {

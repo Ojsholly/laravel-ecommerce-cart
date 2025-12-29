@@ -9,13 +9,24 @@ use App\Models\Product;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Service for managing shopping cart operations.
+ */
 class CartService
 {
+    /**
+     * Get or create a cart for the given user.
+     */
     public function getOrCreateCart(User $user): Cart
     {
         return Cart::with('items.product')->firstOrCreate(['user_id' => $user->id]);
     }
 
+    /**
+     * Add a product to the cart with stock validation.
+     *
+     * @throws InsufficientStockException
+     */
     public function addProduct(Cart $cart, Product $product, int $quantity = 1): CartItem
     {
         return DB::transaction(function () use ($cart, $product, $quantity) {
@@ -41,6 +52,11 @@ class CartService
         });
     }
 
+    /**
+     * Update the quantity of a cart item.
+     *
+     * @throws InsufficientStockException
+     */
     public function updateQuantity(CartItem $item, int $quantity): CartItem
     {
         if ($quantity <= 0) {
@@ -60,16 +76,25 @@ class CartService
         return $item->fresh();
     }
 
+    /**
+     * Remove an item from the cart.
+     */
     public function removeItem(CartItem $item): void
     {
         $item->delete();
     }
 
+    /**
+     * Clear all items from the cart.
+     */
     public function clearCart(Cart $cart): void
     {
         $cart->items()->delete();
     }
 
+    /**
+     * Move a cart item to the user's wishlist.
+     */
     public function moveToWishlist(CartItem $item, User $user): void
     {
         $wishlistService = app(WishlistService::class);

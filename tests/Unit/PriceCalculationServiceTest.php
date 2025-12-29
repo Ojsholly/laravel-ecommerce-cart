@@ -9,7 +9,7 @@ use Tests\TestCase;
 uses(TestCase::class, RefreshDatabase::class)->group('pricing');
 
 beforeEach(function () {
-    $this->service = new PriceCalculationService();
+    $this->service = new PriceCalculationService;
 });
 
 test('formats price correctly', function () {
@@ -20,7 +20,7 @@ test('formats price correctly', function () {
 
 test('calculates order pricing with vat', function () {
     config(['cart.vat_rate' => 7.5]);
-    
+
     $product = Product::factory()->create(['price' => '100.00']);
     $cartItem = new CartItem(['quantity' => 2]);
     $cartItem->product = $product;
@@ -48,7 +48,7 @@ test('calculates pricing with custom vat rate', function () {
 
 test('pricing breakdown includes vat details', function () {
     config(['cart.vat_rate' => 7.5]);
-    
+
     $product = Product::factory()->create(['price' => '50.00']);
     $cartItem = new CartItem(['quantity' => 1]);
     $cartItem->product = $product;

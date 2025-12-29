@@ -20,7 +20,7 @@ class SendDailySalesReport implements ShouldQueue
     {
         $adminEmail = config('mail.admin_email', env('MAIL_ADMIN_EMAIL'));
 
-        if (!$adminEmail) {
+        if (! $adminEmail) {
             return;
         }
 

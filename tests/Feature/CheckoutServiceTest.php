@@ -111,7 +111,7 @@ test('checkout with out of stock product throws exception', function () {
     $product = Product::factory()->create(['stock_quantity' => 1]);
     $cart = $this->cartService->getOrCreateCart($this->user);
     $this->cartService->addProduct($cart, $product, 1);
-    
+
     $product->update(['stock_quantity' => 0]);
 
     $this->checkoutService->processCheckout($cart);
@@ -121,10 +121,10 @@ test('partial checkout with mixed stock', function () {
     $availableProduct = Product::factory()->create(['stock_quantity' => 10]);
     $unavailableProduct = Product::factory()->create(['stock_quantity' => 1]);
     $cart = $this->cartService->getOrCreateCart($this->user);
-    
+
     $this->cartService->addProduct($cart, $availableProduct, 2);
     $this->cartService->addProduct($cart, $unavailableProduct, 1);
-    
+
     $unavailableProduct->update(['stock_quantity' => 0]);
 
     $order = $this->checkoutService->processCheckout($cart);
