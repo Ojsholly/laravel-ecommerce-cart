@@ -13,8 +13,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
         User::firstOrCreate(
             ['email' => 'test@example.com'],
             [
@@ -23,5 +21,9 @@ class DatabaseSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+
+        \App\Models\Product::factory(20)->create();
+        \App\Models\Product::factory(3)->lowStock()->create();
+        \App\Models\Product::factory(2)->outOfStock()->create();
     }
 }
