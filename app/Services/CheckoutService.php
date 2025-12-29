@@ -5,12 +5,17 @@ namespace App\Services;
 use App\Enums\OrderStatus;
 use App\Exceptions\EmptyCartException;
 use App\Exceptions\InsufficientStockException;
+use App\Jobs\SendLowStockNotification;
 use App\Models\Cart;
+use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Service for handling checkout operations and order creation.
+ */
 class CheckoutService
 {
     public function __construct(
@@ -18,6 +23,12 @@ class CheckoutService
         private CartService $cartService
     ) {}
 
+    /**
+     * Process checkout for a cart and create an order.
+     *
+     * @throws EmptyCartException
+     * @throws InsufficientStockException
+     */
     public function processCheckout(Cart $cart): Order
     {
         return DB::transaction(function () use ($cart) {
@@ -33,7 +44,7 @@ class CheckoutService
                 throw new InsufficientStockException('All items in your cart are out of stock.');
             }
 
-            $pricing = $this->priceCalculationService->calculateOrderPricing($availableItems->toArray());
+            $pricing = $this->priceCalculationService->calculateOrderPricing($availableItems);
 
             $order = Order::create([
                 'order_number' => Order::generateOrderNumber(),
@@ -91,7 +102,7 @@ class CheckoutService
         $product->decrement('stock_quantity', $quantity);
 
         if ($product->fresh()->isLowStock()) {
-            // Dispatch low stock notification job here in Phase 4
+            SendLowStockNotification::dispatch($product);
         }
     }
 }

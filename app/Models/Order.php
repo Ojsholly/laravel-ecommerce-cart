@@ -51,10 +51,8 @@ class Order extends Model
     public static function generateOrderNumber(): string
     {
         $maxAttempts = 10;
-        $attempt = 0;
 
-        do {
-            $attempt++;
+        for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
             $date = date('Ymd');
             $randomSuffix = str_pad((string) random_int(1, 9999), 4, '0', STR_PAD_LEFT);
             $orderNumber = 'ORD-'.$date.'-'.$randomSuffix;
@@ -62,11 +60,9 @@ class Order extends Model
             if (! static::where('order_number', $orderNumber)->exists()) {
                 return $orderNumber;
             }
+        }
 
-            if ($attempt >= $maxAttempts) {
-                throw new \RuntimeException('Unable to generate unique order number after '.$maxAttempts.' attempts.');
-            }
-        } while (true);
+        throw new \RuntimeException('Unable to generate unique order number after '.$maxAttempts.' attempts.');
     }
 
     public function user(): BelongsTo

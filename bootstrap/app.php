@@ -15,4 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
-    })->create();
+    })
+    ->withSchedule(function ($schedule): void {
+        $schedule->job(new \App\Jobs\SendDailySalesReport(today()->toDateString()))
+            ->dailyAt('08:00')
+            ->name('daily-sales-report')
+            ->onOneServer();
+    })
+    ->create();

@@ -6,10 +6,17 @@ use App\DataTransferObjects\PricingDTO;
 use App\Services\Pricing\ApplyVATPipe;
 use App\Services\Pricing\CalculateSubtotalPipe;
 use Illuminate\Pipeline\Pipeline;
+use Illuminate\Support\Collection;
 
+/**
+ * Service for calculating prices with VAT using a pipeline pattern.
+ */
 class PriceCalculationService
 {
-    public function calculateOrderPricing(array $items, ?float $vatRate = null): PricingDTO
+    /**
+     * Calculate order pricing including VAT using pipeline pattern.
+     */
+    public function calculateOrderPricing(Collection|array $items, ?float $vatRate = null): PricingDTO
     {
         $pipes = [
             new CalculateSubtotalPipe($items),
