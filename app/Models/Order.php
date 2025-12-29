@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\OrderStatus;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -28,6 +29,7 @@ class Order extends Model
             'vat_rate' => 'decimal:2',
             'vat_amount' => 'decimal:2',
             'total' => 'decimal:2',
+            'status' => OrderStatus::class,
         ];
     }
 
@@ -43,10 +45,13 @@ class Order extends Model
 
     public static function generateOrderNumber(): string
     {
-        $date = date('Ymd');
-        $count = static::whereDate('created_at', today())->count() + 1;
+        do {
+            $date = date('Ymd');
+            $count = static::whereDate('created_at', today())->count() + 1;
+            $orderNumber = 'ORD-'.$date.'-'.str_pad($count, 4, '0', STR_PAD_LEFT);
+        } while (static::where('order_number', $orderNumber)->exists());
 
-        return 'ORD-'.$date.'-'.str_pad($count, 4, '0', STR_PAD_LEFT);
+        return $orderNumber;
     }
 
     public function user()
@@ -61,7 +66,7 @@ class Order extends Model
 
     public function scopeCompleted($query)
     {
-        return $query->where('status', 'completed');
+        return $query->where('status', OrderStatus::COMPLETED);
     }
 
     public function scopeForDate($query, $date)

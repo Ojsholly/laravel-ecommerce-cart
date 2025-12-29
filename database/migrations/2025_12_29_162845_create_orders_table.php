@@ -20,7 +20,7 @@ return new class extends Migration
             $table->decimal('vat_rate', 5, 2)->default(7.5);
             $table->decimal('vat_amount', 10, 2);
             $table->decimal('total', 10, 2);
-            $table->enum('status', ['pending', 'completed', 'cancelled'])->default('completed');
+            $table->string('status')->default('completed');
             $table->timestamps();
 
             $table->index('uuid');
