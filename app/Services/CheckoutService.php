@@ -68,15 +68,19 @@ class CheckoutService
         });
     }
 
+    /**
+     * @return array{0: \Illuminate\Support\Collection<int, CartItem>, 1: \Illuminate\Support\Collection<int, CartItem>}
+     */
     private function validateStock(Cart $cart): array
     {
         $availableItems = collect();
         $unavailableItems = collect();
 
         foreach ($cart->items as $item) {
+            /** @var CartItem $item */
             $product = Product::lockForUpdate()->find($item->product_id);
 
-            if ($product->hasStock($item->quantity)) {
+            if ($product && $product->hasStock($item->quantity)) {
                 $availableItems->push($item);
             } else {
                 $unavailableItems->push($item);
@@ -88,12 +92,15 @@ class CheckoutService
 
     private function createOrderItem(Order $order, CartItem $cartItem): OrderItem
     {
+        /** @var Product $product */
+        $product = $cartItem->product;
+
         return OrderItem::create([
             'order_id' => $order->id,
             'product_id' => $cartItem->product_id,
             'quantity' => $cartItem->quantity,
-            'price_snapshot' => $cartItem->product->price,
-            'product_snapshot' => $cartItem->product->toSnapshot(),
+            'price_snapshot' => $product->price,
+            'product_snapshot' => $product->toSnapshot(),
         ]);
     }
 

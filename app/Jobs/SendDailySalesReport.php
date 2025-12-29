@@ -31,7 +31,7 @@ class SendDailySalesReport implements ShouldQueue
         $stats = [
             'total_orders' => $orderStats->total_orders ?? 0,
             'total_revenue' => $orderStats->total_revenue ?? '0.00',
-            'total_items' => (clone $query)->join('order_items', 'orders.id', '=', 'order_items.order_id')->sum('order_items.quantity') ?? 0,
+            'total_items' => (clone $query)->join('order_items', 'orders.id', '=', 'order_items.order_id')->sum('order_items.quantity') ?: 0,
         ];
 
         $recentOrders = (clone $query)->latest()

@@ -55,6 +55,7 @@ class CartService
     /**
      * Update the quantity of a cart item.
      *
+     *
      * @throws \InvalidArgumentException
      * @throws InsufficientStockException
      */
@@ -64,14 +65,18 @@ class CartService
             throw new \InvalidArgumentException('Quantity must be a positive integer. To remove an item, use the removeItem() method.');
         }
 
-        if (! $item->product->hasStock($quantity)) {
+        /** @var Product $product */
+        $product = $item->product;
+
+        if (! $product->hasStock($quantity)) {
             throw new InsufficientStockException(
-                "Only {$item->product->stock_quantity} units available for {$item->product->name}."
+                "Only {$product->stock_quantity} units available for {$product->name}."
             );
         }
 
         $item->update(['quantity' => $quantity]);
 
+        /** @var CartItem */
         return $item->fresh();
     }
 
@@ -100,7 +105,9 @@ class CartService
         $wishlist = $wishlistService->getOrCreateWishlist($user);
 
         DB::transaction(function () use ($wishlistService, $wishlist, $item) {
-            $wishlistService->addProduct($wishlist, $item->product);
+            /** @var Product $product */
+            $product = $item->product;
+            $wishlistService->addProduct($wishlist, $product);
             $this->removeItem($item);
         });
     }

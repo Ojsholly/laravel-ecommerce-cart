@@ -49,6 +49,7 @@ A modern, production-ready e-commerce shopping cart built with Laravel 12, Livew
 - **Authentication:** Laravel Fortify
 - **Queue:** Database driver (configurable)
 - **Mail:** Log driver (development), SMTP (production)
+- **Logging:** Laravel Log Viewer (opcodesio/log-viewer)
 
 ---
 
@@ -203,6 +204,27 @@ php artisan horizon
 # For development, run manually
 php artisan schedule:work
 ```
+
+### Log Viewer
+
+Access application logs through the web interface:
+
+```bash
+# Visit the log viewer in your browser
+https://laravel-ecommerce-cart.test/log-viewer
+
+# Or using artisan serve
+http://localhost:8000/log-viewer
+```
+
+**Features:**
+- 📊 View all application logs in a beautiful UI
+- 🔍 Search and filter logs by level, date, and content
+- 📧 View sent emails (when using log mail driver)
+- 🐛 Debug errors and exceptions easily
+- 📈 Log statistics and analytics
+
+**Package:** [opcodesio/log-viewer](https://github.com/opcodesio/log-viewer)
 
 ---
 
