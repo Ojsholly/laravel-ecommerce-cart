@@ -19,6 +19,7 @@ class Order extends Model
         'vat_rate',
         'vat_amount',
         'total',
+        'pricing_breakdown',
         'status',
     ];
 
@@ -29,6 +30,7 @@ class Order extends Model
             'vat_rate' => 'decimal:2',
             'vat_amount' => 'decimal:2',
             'total' => 'decimal:2',
+            'pricing_breakdown' => 'array',
             'status' => OrderStatus::class,
         ];
     }
