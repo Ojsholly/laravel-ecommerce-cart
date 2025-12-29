@@ -133,16 +133,29 @@ createdb laravel_ecommerce_cart
 php artisan migrate
 ```
 
-### 3. Seed Database (Optional)
+### 3. Seed Database (Recommended)
 
 ```bash
 php artisan db:seed
 ```
 
 This will create:
-- Sample products with stock
-- Test users
-- Sample orders
+- **3 test users** with credentials (see below)
+- **25 products** (20 in stock, 3 low stock, 2 out of stock)
+- **Sample cart** with items for testing
+- **Sample orders** (completed and pending)
+
+#### 🔑 Test Credentials
+
+After seeding, you can log in with these accounts:
+
+| Email | Password | Role | Description |
+|-------|----------|------|-------------|
+| `admin@ecommerce.test` | `password` | Admin | Admin user for testing |
+| `customer@ecommerce.test` | `password` | Customer | Has sample cart & orders |
+| `jane@ecommerce.test` | `password` | Customer | Has sample orders |
+
+**Note:** All passwords are `password` for easy testing.
 
 ---
 
