@@ -13,6 +13,14 @@ Route::view('dashboard', 'dashboard')
     ->name('dashboard');
 
 Route::middleware(['auth'])->group(function () {
+    // Shop Routes
+    Volt::route('products', 'products.index')->name('products.index');
+    Volt::route('cart', 'cart.index')->name('cart.index');
+    Volt::route('wishlist', 'wishlist.index')->name('wishlist.index');
+    Volt::route('checkout', 'checkout.index')->name('checkout.index');
+    Volt::route('orders/{order}', 'orders.show')->name('orders.show');
+
+    // Settings Routes
     Route::redirect('settings', 'settings/profile');
 
     Volt::route('settings/profile', 'settings.profile')->name('profile.edit');
