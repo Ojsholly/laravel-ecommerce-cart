@@ -6,10 +6,11 @@ use App\DataTransferObjects\PricingDTO;
 use App\Services\Pricing\ApplyVATPipe;
 use App\Services\Pricing\CalculateSubtotalPipe;
 use Illuminate\Pipeline\Pipeline;
+use Illuminate\Support\Collection;
 
 class PriceCalculationService
 {
-    public function calculateOrderPricing(array $items, ?float $vatRate = null): PricingDTO
+    public function calculateOrderPricing(Collection|array $items, ?float $vatRate = null): PricingDTO
     {
         $pipes = [
             new CalculateSubtotalPipe($items),

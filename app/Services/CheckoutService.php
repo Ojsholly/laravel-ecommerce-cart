@@ -7,6 +7,7 @@ use App\Exceptions\EmptyCartException;
 use App\Exceptions\InsufficientStockException;
 use App\Jobs\SendLowStockNotification;
 use App\Models\Cart;
+use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -34,7 +35,7 @@ class CheckoutService
                 throw new InsufficientStockException('All items in your cart are out of stock.');
             }
 
-            $pricing = $this->priceCalculationService->calculateOrderPricing($availableItems->toArray());
+            $pricing = $this->priceCalculationService->calculateOrderPricing($availableItems);
 
             $order = Order::create([
                 'order_number' => Order::generateOrderNumber(),

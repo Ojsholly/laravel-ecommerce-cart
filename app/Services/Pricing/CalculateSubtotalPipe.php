@@ -4,10 +4,11 @@ namespace App\Services\Pricing;
 
 use App\Contracts\PricingPipeInterface;
 use App\DataTransferObjects\PricingDTO;
+use Illuminate\Support\Collection;
 
 class CalculateSubtotalPipe implements PricingPipeInterface
 {
-    public function __construct(private array $items) {}
+    public function __construct(private Collection|array $items) {}
 
     public function handle(PricingDTO $pricing, \Closure $next): PricingDTO
     {
