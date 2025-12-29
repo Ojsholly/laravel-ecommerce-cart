@@ -71,15 +71,13 @@ test('can update cart item quantity', function () {
     expect($updatedItem->quantity)->toBe(5);
 });
 
-test('updating to zero removes item', function () {
+test('updating to zero throws exception', function () {
     $product = Product::factory()->create(['stock_quantity' => 10]);
     $cart = $this->cartService->getOrCreateCart($this->user);
     $cartItem = $this->cartService->addProduct($cart, $product, 2);
 
     $this->cartService->updateQuantity($cartItem, 0);
-
-    $this->assertDatabaseMissing('cart_items', ['id' => $cartItem->id]);
-});
+})->throws(\InvalidArgumentException::class, 'Quantity must be a positive integer');
 
 test('can remove item from cart', function () {
     $product = Product::factory()->create(['stock_quantity' => 10]);

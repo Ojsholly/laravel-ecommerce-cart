@@ -55,14 +55,13 @@ class CartService
     /**
      * Update the quantity of a cart item.
      *
+     * @throws \InvalidArgumentException
      * @throws InsufficientStockException
      */
     public function updateQuantity(CartItem $item, int $quantity): CartItem
     {
         if ($quantity <= 0) {
-            $this->removeItem($item);
-
-            return $item;
+            throw new \InvalidArgumentException('Quantity must be a positive integer. To remove an item, use the removeItem() method.');
         }
 
         if (! $item->product->hasStock($quantity)) {
