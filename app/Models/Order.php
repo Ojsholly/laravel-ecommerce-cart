@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use App\Enums\OrderStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Order extends Model
 {
@@ -47,31 +50,41 @@ class Order extends Model
 
     public static function generateOrderNumber(): string
     {
-        do {
-            $date = date('Ymd');
-            $count = static::whereDate('created_at', today())->count() + 1;
-            $orderNumber = 'ORD-'.$date.'-'.str_pad($count, 4, '0', STR_PAD_LEFT);
-        } while (static::where('order_number', $orderNumber)->exists());
+        $maxAttempts = 10;
+        $attempt = 0;
 
-        return $orderNumber;
+        do {
+            $attempt++;
+            $date = date('Ymd');
+            $randomSuffix = str_pad((string) random_int(1, 9999), 4, '0', STR_PAD_LEFT);
+            $orderNumber = 'ORD-'.$date.'-'.$randomSuffix;
+
+            if (! static::where('order_number', $orderNumber)->exists()) {
+                return $orderNumber;
+            }
+
+            if ($attempt >= $maxAttempts) {
+                throw new \RuntimeException('Unable to generate unique order number after '.$maxAttempts.' attempts.');
+            }
+        } while (true);
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function items()
+    public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
     }
 
-    public function scopeCompleted($query)
+    public function scopeCompleted(Builder $query): Builder
     {
         return $query->where('status', OrderStatus::COMPLETED);
     }
 
-    public function scopeForDate($query, $date)
+    public function scopeForDate(Builder $query, $date): Builder
     {
         return $query->whereDate('created_at', $date);
     }

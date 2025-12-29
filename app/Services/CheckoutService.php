@@ -75,7 +75,7 @@ class CheckoutService
         return [$availableItems, $unavailableItems];
     }
 
-    private function createOrderItem(Order $order, $cartItem): OrderItem
+    private function createOrderItem(Order $order, CartItem $cartItem): OrderItem
     {
         return OrderItem::create([
             'order_id' => $order->id,
