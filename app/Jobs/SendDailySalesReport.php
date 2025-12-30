@@ -81,8 +81,22 @@ class SendDailySalesReport implements ShouldQueue
     private function getTopSellingProducts(): Collection
     {
         $topProductsData = $this->getTopProductsData();
+        $orderItemsByProductId = $this->getOrderItemsByProductIds($topProductsData->pluck('product_id'));
 
-        return $topProductsData->map(fn ($item) => $this->formatTopProduct($item));
+        /** @phpstan-ignore argument.unresolvableType */
+        return $topProductsData->map(function ($item) use ($orderItemsByProductId) {
+            /** @phpstan-ignore property.notFound */
+            $orderItem = $orderItemsByProductId->get($item->product_id);
+            $snapshot = $orderItem->product_snapshot ?? [];
+
+            return [
+                'name' => $snapshot['name'] ?? 'Unknown Product',
+                /** @phpstan-ignore property.notFound */
+                'quantity' => $item->total_quantity,
+                /** @phpstan-ignore property.notFound */
+                'revenue' => number_format((float) $item->total_sales, 2),
+            ];
+        });
     }
 
     private function getTopProductsData(): \Illuminate\Database\Eloquent\Collection
@@ -97,26 +111,14 @@ class SendDailySalesReport implements ShouldQueue
             ->get();
     }
 
-    private function formatTopProduct(object $item): array
+    private function getOrderItemsByProductIds(Collection $productIds): Collection
     {
-        $snapshot = $this->getProductSnapshot($item->product_id);
-
-        return [
-            'name' => $snapshot['name'] ?? 'Unknown Product',
-            'quantity' => $item->total_quantity,
-            'revenue' => number_format((float) $item->total_sales, 2),
-        ];
-    }
-
-    private function getProductSnapshot(int $productId): array
-    {
-        $orderItem = OrderItem::where('product_id', $productId)
+        return OrderItem::whereIn('product_id', $productIds)
             ->whereHas('order', function (Builder $query) {
                 /** @phpstan-ignore method.notFound */
                 $query->completed()->whereDate('created_at', $this->date);
             })
-            ->first();
-
-        return $orderItem ? $orderItem->product_snapshot : [];
+            ->get()
+            ->keyBy('product_id');
     }
 }

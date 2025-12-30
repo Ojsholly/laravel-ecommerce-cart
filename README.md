@@ -593,7 +593,7 @@ $pricing->breakdown['vat']['amount'];
 ### Performance Considerations
 
 1. **Eager Loading:** All relationships are eager-loaded to prevent N+1 queries
-2. **Pagination:** Large datasets are paginated (10 items per page)
+2. **Pagination:** Large datasets are paginated (12 items per page for products, 10 for orders)
 3. **Database Indexes:** Foreign keys and frequently queried columns are indexed
 4. **Query Optimization:** PHPStan ensures type safety and catches potential issues
 5. **Caching:** Can be added for product listings and frequently accessed data

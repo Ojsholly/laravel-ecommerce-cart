@@ -27,7 +27,7 @@ class Order extends Model
     ];
 
     protected $attributes = [
-        'status' => 'completed',
+        'status' => OrderStatus::COMPLETED->value,
     ];
 
     protected function casts(): array
