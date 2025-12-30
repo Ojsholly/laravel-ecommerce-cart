@@ -27,7 +27,7 @@ class OrderFactory extends Factory
             'total' => function (array $attributes) {
                 return bcadd($attributes['subtotal'], $attributes['vat_amount'], 2);
             },
-            'status' => fake()->randomElement(['pending', 'completed', 'cancelled']),
+            'status' => 'completed',
             'pricing_breakdown' => function (array $attributes) {
                 return [
                     'vat' => [

@@ -54,7 +54,7 @@ class CheckoutService
                 'vat_amount' => $pricing->breakdown['vat']['amount'] ?? '0.00',
                 'total' => $pricing->total,
                 'pricing_breakdown' => $pricing->breakdown,
-                'status' => OrderStatus::PENDING,
+                'status' => OrderStatus::COMPLETED,
             ]);
 
             foreach ($availableItems as $item) {

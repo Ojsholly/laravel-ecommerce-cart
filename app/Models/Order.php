@@ -26,6 +26,10 @@ class Order extends Model
         'status',
     ];
 
+    protected $attributes = [
+        'status' => 'completed',
+    ];
+
     protected function casts(): array
     {
         return [
