@@ -15,11 +15,17 @@
                 <flux:navbar.item icon="shopping-bag" :href="route('products.index')" :current="request()->routeIs('products.*')" wire:navigate>
                     {{ __('Products') }}
                 </flux:navbar.item>
+                <flux:navbar.item icon="shopping-cart" :href="route('cart.index')" :current="request()->routeIs('cart.*')" wire:navigate>
+                    {{ __('Cart') }}
+                </flux:navbar.item>
+                <flux:navbar.item icon="heart" :href="route('wishlist.index')" :current="request()->routeIs('wishlist.*')" wire:navigate>
+                    {{ __('Wishlist') }}
+                </flux:navbar.item>
             </flux:navbar>
 
             <flux:spacer />
 
-            <flux:navbar class="me-1.5 space-x-0.5 rtl:space-x-reverse py-0!">
+            <flux:navbar class="me-1.5 space-x-1 rtl:space-x-reverse">
                 <livewire:cart.icon />
                 <livewire:wishlist.icon />
             </flux:navbar>
@@ -87,6 +93,9 @@
                     </flux:navlist.item>
                     <flux:navlist.item icon="heart" :href="route('wishlist.index')" :current="request()->routeIs('wishlist.*')" wire:navigate>
                         {{ __('Wishlist') }}
+                    </flux:navlist.item>
+                    <flux:navlist.item icon="clipboard-document-list" :href="route('orders.index')" :current="request()->routeIs('orders.*')" wire:navigate>
+                        {{ __('Orders') }}
                     </flux:navlist.item>
                 </flux:navlist.group>
             </flux:navlist>

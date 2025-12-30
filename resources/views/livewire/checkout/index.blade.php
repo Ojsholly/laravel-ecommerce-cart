@@ -8,10 +8,8 @@ use Livewire\Volt\Component;
 
 new #[Layout('components.layouts.app')] class extends Component {
     public $cart;
-    public $pricing;
-    public $priceService;
 
-    public function mount(): void
+    public function mount()
     {
         $cartService = app(CartService::class);
         $this->cart = $cartService->getOrCreateCart(auth()->user());
@@ -19,9 +17,16 @@ new #[Layout('components.layouts.app')] class extends Component {
         if ($this->cart->items->isEmpty()) {
             return redirect()->route('cart.index');
         }
+    }
 
-        $this->priceService = app(PriceCalculationService::class);
-        $this->pricing = $this->priceService->calculateOrderPricing($this->cart->items);
+    private function priceService(): PriceCalculationService
+    {
+        return app(PriceCalculationService::class);
+    }
+
+    private function pricing()
+    {
+        return $this->priceService()->calculateOrderPricing($this->cart->items);
     }
 
     public function placeOrder(): void
@@ -67,9 +72,9 @@ new #[Layout('components.layouts.app')] class extends Component {
                                 <div>
                                     <flux:heading size="sm">{{ $item->product->name }}</flux:heading>
                                     <flux:text class="mt-1 text-sm">Quantity: {{ $item->quantity }}</flux:text>
-                                    <flux:text class="mt-1 text-sm">{{ $priceService->formatPrice($item->product->price) }} each</flux:text>
+                                    <flux:text class="mt-1 text-sm">{{ $this->priceService()->formatPrice($item->product->price) }} each</flux:text>
                                 </div>
-                                <flux:text class="font-bold">{{ $priceService->formatPrice($item->getSubtotal()) }}</flux:text>
+                                <flux:text class="font-bold">{{ $this->priceService()->formatPrice($item->getSubtotal()) }}</flux:text>
                             </div>
                         </div>
                     @endforeach
@@ -84,13 +89,13 @@ new #[Layout('components.layouts.app')] class extends Component {
                 <div class="space-y-3">
                     <div class="flex justify-between">
                         <flux:text>Subtotal</flux:text>
-                        <flux:text>{{ $priceService->formatPrice($pricing->subtotal) }}</flux:text>
+                        <flux:text>{{ $this->priceService()->formatPrice($this->pricing()->subtotal) }}</flux:text>
                     </div>
 
-                    @foreach($pricing->breakdown as $key => $item)
+                    @foreach($this->pricing()->breakdown as $key => $item)
                         <div class="flex justify-between text-sm">
                             <flux:text>{{ $item['label'] }}</flux:text>
-                            <flux:text>{{ $priceService->formatPrice($item['amount']) }}</flux:text>
+                            <flux:text>{{ $this->priceService()->formatPrice($item['amount']) }}</flux:text>
                         </div>
                     @endforeach
                 </div>
@@ -99,7 +104,7 @@ new #[Layout('components.layouts.app')] class extends Component {
 
                 <div class="flex justify-between text-lg font-bold">
                     <flux:text>Total</flux:text>
-                    <flux:text>{{ $priceService->formatPrice($pricing->total) }}</flux:text>
+                    <flux:text>{{ $this->priceService()->formatPrice($this->pricing()->total) }}</flux:text>
                 </div>
 
                 <flux:button 
