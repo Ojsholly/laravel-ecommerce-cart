@@ -10,6 +10,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property string $uuid
+ * @property string $name
+ * @property string $description
+ * @property string $price
+ * @property int $stock_quantity
+ * @property array<int, array<string, mixed>> $images
+ * @property-read array<string, mixed>|null $primary_image
+ * @property-read array<int, array<string, mixed>> $sorted_images
+ */
 class Product extends Model
 {
     use HasFactory, HasUuids, SoftDeletes;
@@ -49,24 +60,30 @@ class Product extends Model
         );
     }
 
+    /**
+     * @return Attribute<array<string, mixed>|null, never>
+     */
     protected function primaryImage(): Attribute
     {
         return Attribute::make(
-            get: function () {
+            get: function (): ?array {
                 if (empty($this->images)) {
                     return null;
                 }
                 $primary = collect($this->images)->firstWhere('is_primary', true);
 
-                return $primary ?? $this->images[0] ?? null;
+                return is_array($primary) ? $primary : ($this->images[0] ?? null);
             }
         );
     }
 
+    /**
+     * @return Attribute<array<int, array<string, mixed>>, never>
+     */
     protected function sortedImages(): Attribute
     {
         return Attribute::make(
-            get: function () {
+            get: function (): array {
                 if (empty($this->images)) {
                     return [];
                 }

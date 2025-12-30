@@ -8,7 +8,6 @@ use Livewire\Volt\Component;
 
 new #[Layout('components.layouts.app')] class extends Component {
     public $wishlist;
-    public $priceService;
 
     public function mount(): void
     {
@@ -21,7 +20,11 @@ new #[Layout('components.layouts.app')] class extends Component {
         $wishlistService = app(WishlistService::class);
         $this->wishlist = $wishlistService->getOrCreateWishlist(auth()->user());
         $this->wishlist->load('items.product');
-        $this->priceService = app(PriceCalculationService::class);
+    }
+
+    private function priceService(): PriceCalculationService
+    {
+        return app(PriceCalculationService::class);
     }
 
     public function removeItem(int $itemId): void
@@ -100,7 +103,7 @@ new #[Layout('components.layouts.app')] class extends Component {
                         <flux:subheading class="mt-1 line-clamp-2">{{ $item->product->description }}</flux:subheading>
 
                         <div class="mt-4 flex items-center justify-between">
-                            <flux:text class="text-lg font-bold">{{ $priceService->formatPrice($item->product->price) }}</flux:text>
+                            <flux:text class="text-lg font-bold">{{ $this->priceService()->formatPrice($item->product->price) }}</flux:text>
                             
                             @if($item->product->isLowStock())
                                 <flux:badge color="yellow" size="sm">Low Stock</flux:badge>

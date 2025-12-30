@@ -9,6 +9,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, CartItem> $items
+ * @property-read int $item_count
+ */
 class Cart extends Model
 {
     use HasFactory;
@@ -35,7 +41,8 @@ class Cart extends Model
     public function getTotal(): string
     {
         return $this->items->reduce(
-            fn (string $total, CartItem $item) => bcadd($total, $item->getSubtotal(), 2),
+            /** @param numeric-string $total */
+            fn (string $total, CartItem $item): string => bcadd($total, $item->getSubtotal(), 2),
             '0'
         );
     }

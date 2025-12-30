@@ -21,15 +21,15 @@ new class extends Component {
     }
 }; ?>
 
-<div>
-    <flux:tooltip :content="__('Wishlist')" position="bottom">
-        <a href="{{ route('wishlist.index') }}" wire:navigate class="relative inline-flex items-center">
-            <flux:navbar.item class="!h-10 [&>div>svg]:size-5" icon="heart" :label="__('Wishlist')" />
-            @if($itemCount > 0)
-                <span class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
-                    {{ $itemCount > 9 ? '9+' : $itemCount }}
-                </span>
-            @endif
-        </a>
-    </flux:tooltip>
+<div class="relative">
+    <a href="{{ route('wishlist.index') }}" wire:navigate class="relative inline-flex items-center justify-center p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+        <svg class="size-6 text-zinc-700 dark:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+        </svg>
+        @if($itemCount > 0)
+            <span class="absolute -top-0.5 -right-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white">
+                {{ $itemCount > 9 ? '9+' : $itemCount }}
+            </span>
+        @endif
+    </a>
 </div>

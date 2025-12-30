@@ -15,9 +15,11 @@ Route::view('dashboard', 'dashboard')
 Route::middleware(['auth'])->group(function () {
     // Shop Routes
     Volt::route('products', 'products.index')->name('products.index');
+    Volt::route('products/{product}', 'products.show')->name('products.show');
     Volt::route('cart', 'cart.index')->name('cart.index');
     Volt::route('wishlist', 'wishlist.index')->name('wishlist.index');
     Volt::route('checkout', 'checkout.index')->name('checkout.index');
+    Volt::route('orders', 'orders.index')->name('orders.index');
     Volt::route('orders/{order}', 'orders.show')->name('orders.show');
 
     // Settings Routes

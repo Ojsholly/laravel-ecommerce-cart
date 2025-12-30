@@ -16,6 +16,7 @@ class DailySalesReport extends Mailable
     public function __construct(
         public array $stats,
         public Collection $recentOrders,
+        public \Illuminate\Support\Collection $topProducts,
         public string $date
     ) {}
 

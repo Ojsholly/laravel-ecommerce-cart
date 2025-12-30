@@ -48,17 +48,20 @@ class WishlistService
 
     public function moveToCart(WishlistItem $item, User $user): void
     {
-        if (! $item->product->hasStock(1)) {
+        /** @var Product $product */
+        $product = $item->product;
+
+        if (! $product->hasStock(1)) {
             throw new InsufficientStockException(
-                "{$item->product->name} is currently out of stock."
+                "{$product->name} is currently out of stock."
             );
         }
 
         $cartService = app(CartService::class);
         $cart = $cartService->getOrCreateCart($user);
 
-        DB::transaction(function () use ($cartService, $cart, $item) {
-            $cartService->addProduct($cart, $item->product, 1);
+        DB::transaction(function () use ($cartService, $cart, $item, $product) {
+            $cartService->addProduct($cart, $product, 1);
             $this->removeProduct($item);
         });
     }

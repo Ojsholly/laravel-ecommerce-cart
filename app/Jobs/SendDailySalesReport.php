@@ -4,8 +4,11 @@ namespace App\Jobs;
 
 use App\Mail\DailySalesReport;
 use App\Models\Order;
+use App\Models\OrderItem;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Mail;
 
 class SendDailySalesReport implements ShouldQueue
@@ -18,27 +21,104 @@ class SendDailySalesReport implements ShouldQueue
 
     public function handle(): void
     {
-        $adminEmail = config('mail.admin_email');
+        $adminEmail = $this->getAdminEmail();
 
         if (! $adminEmail) {
             return;
         }
 
-        $query = Order::completed()->whereDate('created_at', $this->date);
+        $stats = $this->calculateStats();
+        $recentOrders = $this->getRecentOrders();
+        $topProducts = $this->getTopSellingProducts();
 
-        $orderStats = (clone $query)->selectRaw('count(*) as total_orders, sum(total) as total_revenue')->first();
+        Mail::to($adminEmail)->send(new DailySalesReport($stats, $recentOrders, $topProducts, $this->date));
+    }
 
-        $stats = [
+    private function getAdminEmail(): ?string
+    {
+        return config('mail.admin_email');
+    }
+
+    private function getCompletedOrdersQuery(): Builder
+    {
+        return Order::completed()->whereDate('created_at', $this->date);
+    }
+
+    private function calculateStats(): array
+    {
+        $orderStats = $this->getCompletedOrdersQuery()
+            ->selectRaw('count(*) as total_orders, sum(total) as total_revenue')
+            ->first();
+
+        $totalItems = $this->getTotalItemsSold();
+
+        return [
             'total_orders' => $orderStats->total_orders ?? 0,
             'total_revenue' => $orderStats->total_revenue ?? '0.00',
-            'total_items' => (clone $query)->join('order_items', 'orders.id', '=', 'order_items.order_id')->sum('order_items.quantity') ?? 0,
+            'total_items' => $totalItems,
         ];
+    }
 
-        $recentOrders = (clone $query)->latest()
+    private function getTotalItemsSold(): int
+    {
+        $totalItems = Order::completed()
+            ->whereDate('orders.created_at', $this->date)
+            ->join('order_items', 'orders.id', '=', 'order_items.order_id')
+            ->sum('order_items.quantity');
+
+        return $totalItems ?: 0;
+    }
+
+    private function getRecentOrders(): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->getCompletedOrdersQuery()
+            ->latest()
             ->limit(10)
             ->select('id', 'order_number', 'total', 'created_at')
             ->get();
+    }
 
-        Mail::to($adminEmail)->send(new DailySalesReport($stats, $recentOrders, $this->date));
+    private function getTopSellingProducts(): Collection
+    {
+        $topProductsData = $this->getTopProductsData();
+        $orderItemsByProductId = $this->getOrderItemsByProductIds($topProductsData->pluck('product_id'));
+
+        /** @phpstan-ignore argument.unresolvableType */
+        return $topProductsData->map(function ($item) use ($orderItemsByProductId) {
+            /** @phpstan-ignore property.notFound */
+            $orderItem = $orderItemsByProductId->get($item->product_id);
+            $snapshot = $orderItem->product_snapshot ?? [];
+
+            return [
+                'name' => $snapshot['name'] ?? 'Unknown Product',
+                /** @phpstan-ignore property.notFound */
+                'quantity' => $item->total_quantity,
+                /** @phpstan-ignore property.notFound */
+                'revenue' => number_format((float) $item->total_sales, 2),
+            ];
+        });
+    }
+
+    private function getTopProductsData(): \Illuminate\Database\Eloquent\Collection
+    {
+        return Order::completed()
+            ->whereDate('orders.created_at', $this->date)
+            ->join('order_items', 'orders.id', '=', 'order_items.order_id')
+            ->selectRaw('order_items.product_id, sum(order_items.quantity) as total_quantity, sum(order_items.quantity * order_items.price_snapshot) as total_sales')
+            ->groupBy('order_items.product_id')
+            ->orderByDesc('total_quantity')
+            ->limit(5)
+            ->get();
+    }
+
+    private function getOrderItemsByProductIds(Collection $productIds): Collection
+    {
+        return OrderItem::whereIn('product_id', $productIds)
+            ->whereHas('order', function (Builder $query) {
+                /** @phpstan-ignore method.notFound */
+                $query->completed()->whereDate('created_at', $this->date);
+            })
+            ->get()
+            ->keyBy('product_id');
     }
 }

@@ -33,7 +33,7 @@ test('can process checkout successfully', function () {
 
     expect($order)->not->toBeNull()
         ->and($order->user_id)->toBe($this->user->id)
-        ->and($order->status)->toBe(OrderStatus::PENDING)
+        ->and($order->status)->toBe(OrderStatus::COMPLETED)
         ->and($order->order_number)->not->toBeNull()
         ->and($order->items()->count())->toBe(1);
 });

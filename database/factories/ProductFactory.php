@@ -30,6 +30,7 @@ class ProductFactory extends Factory
         ];
 
         $name = fake()->randomElement($productNames);
+        $randomSeed = fake()->numberBetween(1, 1000);
 
         return [
             'name' => $name,
@@ -38,13 +39,13 @@ class ProductFactory extends Factory
             'stock_quantity' => fake()->numberBetween(0, 100),
             'images' => [
                 [
-                    'url' => 'https://via.placeholder.com/400x400?text='.urlencode($name),
+                    'url' => "https://picsum.photos/seed/{$randomSeed}/400/400",
                     'alt' => $name.' - Front view',
                     'is_primary' => true,
                     'order' => 1,
                 ],
                 [
-                    'url' => 'https://via.placeholder.com/400x400?text='.urlencode($name.' 2'),
+                    'url' => "https://picsum.photos/seed/{$randomSeed}a/400/400",
                     'alt' => $name.' - Side view',
                     'is_primary' => false,
                     'order' => 2,

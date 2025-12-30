@@ -8,6 +8,16 @@ Here's your sales summary for {{ \Carbon\Carbon::parse($date)->format('F d, Y') 
 **Total Items Sold:** {{ number_format($stats['total_items']) }}
 
 @if($stats['total_orders'] > 0)
+## Top 5 Selling Products
+
+@if($topProducts->isNotEmpty())
+@foreach($topProducts as $product)
+- **{{ $product['name'] }}** - {{ number_format($product['quantity']) }} units sold (${{ $product['revenue'] }})
+@endforeach
+@else
+*No product data available*
+@endif
+
 ## Recent Orders (Last 10)
 
 @foreach($recentOrders as $order)
