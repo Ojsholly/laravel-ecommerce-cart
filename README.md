@@ -598,6 +598,14 @@ $pricing->breakdown['vat']['amount'];
 4. **Query Optimization:** PHPStan ensures type safety and catches potential issues
 5. **Caching:** Can be added for product listings and frequently accessed data
 
+### Edge Cases & Business Logic
+
+Edge cases around partial checkout and notification thresholds were handled intentionally to reflect real-world behavior:
+
+1. **Partial Checkout:** When some items are out of stock during checkout, available items are purchased and removed from cart, while unavailable items remain in cart for later purchase
+2. **Low Stock Notifications:** Notifications are only sent when stock crosses the threshold (e.g., from 6 to 5 when threshold is 5), preventing notification spam
+3. **Stock Validation:** Products are locked during checkout to prevent race conditions in concurrent purchases
+
 ### Security Considerations
 
 1. **Authentication:** Laravel Fortify with 2FA support

@@ -11,6 +11,7 @@ use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -19,8 +20,7 @@ use Illuminate\Support\Facades\DB;
 class CheckoutService
 {
     public function __construct(
-        private PriceCalculationService $priceCalculationService,
-        private CartService $cartService
+        private PriceCalculationService $priceCalculationService
     ) {}
 
     /**
@@ -62,7 +62,7 @@ class CheckoutService
                 $this->decrementStock($item->product, $item->quantity);
             }
 
-            $this->cartService->clearCart($cart);
+            $this->removeAvailableItemsFromCart($cart, $availableItems);
 
             return $order;
         });
@@ -104,11 +104,22 @@ class CheckoutService
         ]);
     }
 
+    private function removeAvailableItemsFromCart(Cart $cart, Collection $availableItems): void
+    {
+        $availableItemIds = $availableItems->pluck('id');
+        $cart->items()->whereIn('id', $availableItemIds)->delete();
+    }
+
     private function decrementStock(Product $product, int $quantity): void
     {
+        $lowStockThreshold = config('cart.low_stock_threshold', 10);
+        $stockBeforeDecrement = $product->stock_quantity;
+
         $product->decrement('stock_quantity', $quantity);
 
-        if ($product->fresh()->isLowStock()) {
+        $stockAfterDecrement = $product->fresh()->stock_quantity;
+
+        if ($stockBeforeDecrement > $lowStockThreshold && $stockAfterDecrement <= $lowStockThreshold) {
             SendLowStockNotification::dispatch($product);
         }
     }

@@ -19,6 +19,37 @@ new #[Layout('components.layouts.app')] class extends Component {
         $this->loadWishlist();
     }
 
+    public function getAvailableItemsProperty()
+    {
+        return $this->cart->items->filter(function ($item) {
+            return $item->product->hasStock($item->quantity);
+        });
+    }
+
+    public function getUnavailableItemsProperty()
+    {
+        return $this->cart->items->filter(function ($item) {
+            return !$item->product->hasStock($item->quantity);
+        });
+    }
+
+    public function getAvailableSubtotalProperty()
+    {
+        return $this->availableItems->sum(function ($item) {
+            return $item->getSubtotal();
+        });
+    }
+
+    public function getAvailableItemCountProperty()
+    {
+        return $this->availableItems->sum('quantity');
+    }
+
+    public function getHasAvailableItemsProperty()
+    {
+        return $this->availableItems->isNotEmpty();
+    }
+
     #[On('cart-updated')]
     public function loadCart(): void
     {
@@ -181,9 +212,17 @@ new #[Layout('components.layouts.app')] class extends Component {
         <div class="grid gap-6 lg:grid-cols-3">
             <div class="lg:col-span-2 space-y-4">
                 @foreach($cart->items as $item)
-                    <flux:card>
-                        <div class="flex gap-4">
-                            <div class="h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800">
+                    @php
+                        $isOutOfStock = !$item->product->hasStock($item->quantity);
+                    @endphp
+                    <flux:card class="{{ $isOutOfStock ? 'opacity-60 bg-zinc-50 dark:bg-zinc-900' : '' }}">
+                        <div class="flex gap-4 {{ $isOutOfStock ? 'relative' : '' }}">
+                            @if($isOutOfStock)
+                                <div class="absolute top-0 left-0 z-10">
+                                    <flux:badge color="red" size="sm">Out of Stock</flux:badge>
+                                </div>
+                            @endif
+                            <div class="h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800 {{ $isOutOfStock ? 'grayscale' : '' }}">
                                 @if($item->product->primary_image)
                                     <img 
                                         src="{{ $item->product->primary_image['url'] }}" 
@@ -200,8 +239,11 @@ new #[Layout('components.layouts.app')] class extends Component {
                             <div class="flex flex-1 flex-col">
                                 <div class="flex justify-between">
                                     <div>
-                                        <flux:heading size="lg">{{ $item->product->name }}</flux:heading>
-                                        <flux:text class="mt-1 text-sm">{{ $this->priceService()->formatPrice($item->product->price) }} each</flux:text>
+                                        <flux:heading size="lg" class="{{ $isOutOfStock ? 'text-zinc-500 dark:text-zinc-600' : '' }}">{{ $item->product->name }}</flux:heading>
+                                        <flux:text class="mt-1 text-sm {{ $isOutOfStock ? 'text-zinc-400 dark:text-zinc-600' : '' }}">{{ $this->priceService()->formatPrice($item->product->price) }} each</flux:text>
+                                        @if($isOutOfStock)
+                                            <flux:text class="mt-1 text-sm text-red-600 dark:text-red-400 font-medium">Currently unavailable</flux:text>
+                                        @endif
                                     </div>
                                     <flux:button 
                                         wire:click="confirmRemoveItem({{ $item->id }})" 
@@ -218,7 +260,7 @@ new #[Layout('components.layouts.app')] class extends Component {
                                             variant="outline" 
                                             size="sm"
                                             icon="minus"
-                                            :disabled="$item->quantity <= 1"
+                                            :disabled="$item->quantity <= 1 || $isOutOfStock"
                                         />
                                         <flux:input 
                                             type="number" 
@@ -226,17 +268,18 @@ new #[Layout('components.layouts.app')] class extends Component {
                                             wire:change="updateQuantity({{ $item->id }}, $event.target.value)"
                                             class="w-20 text-center"
                                             min="1"
+                                            :disabled="$isOutOfStock"
                                         />
                                         <flux:button 
                                             wire:click="updateQuantity({{ $item->id }}, {{ $item->quantity + 1 }})" 
                                             variant="outline" 
                                             size="sm"
                                             icon="plus"
-                                            :disabled="!$item->product->hasStock($item->quantity + 1)"
+                                            :disabled="!$item->product->hasStock($item->quantity + 1) || $isOutOfStock"
                                         />
                                     </div>
 
-                                    <flux:text class="text-lg font-bold">
+                                    <flux:text class="text-lg font-bold {{ $isOutOfStock ? 'text-zinc-400 dark:text-zinc-600 line-through' : '' }}">
                                         {{ $this->priceService()->formatPrice($item->getSubtotal()) }}
                                     </flux:text>
                                 </div>
@@ -254,10 +297,16 @@ new #[Layout('components.layouts.app')] class extends Component {
                 <flux:card class="sticky top-4">
                     <flux:heading size="lg" class="mb-4">Order Summary</flux:heading>
 
+                    @if($this->unavailableItems->isNotEmpty())
+                        <flux:callout color="yellow" size="sm" class="mb-4">
+                            {{ $this->unavailableItems->count() }} item(s) out of stock and excluded from total
+                        </flux:callout>
+                    @endif
+
                     <div class="space-y-2">
                         <div class="flex justify-between">
-                            <flux:text>Subtotal ({{ $cart->item_count }} items)</flux:text>
-                            <flux:text>{{ $this->priceService()->formatPrice($cart->getTotal()) }}</flux:text>
+                            <flux:text>Subtotal ({{ $this->availableItemCount }} items)</flux:text>
+                            <flux:text>{{ $this->priceService()->formatPrice($this->availableSubtotal) }}</flux:text>
                         </div>
                     </div>
 
@@ -265,14 +314,21 @@ new #[Layout('components.layouts.app')] class extends Component {
 
                     <div class="flex justify-between font-bold">
                         <flux:text>Total</flux:text>
-                        <flux:text>{{ $this->priceService()->formatPrice($cart->getTotal()) }}</flux:text>
+                        <flux:text>{{ $this->priceService()->formatPrice($this->availableSubtotal) }}</flux:text>
                     </div>
+
+                    @if(!$this->hasAvailableItems)
+                        <flux:callout color="red" size="sm" class="mt-4">
+                            All items in your cart are currently out of stock. Please remove them or wait for restocking.
+                        </flux:callout>
+                    @endif
 
                     <flux:button 
                         href="{{ route('checkout.index') }}" 
                         wire:navigate 
                         variant="primary" 
                         class="mt-6 w-full"
+                        :disabled="!$this->hasAvailableItems"
                     >
                         Proceed to Checkout
                     </flux:button>

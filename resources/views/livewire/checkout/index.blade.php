@@ -19,6 +19,25 @@ new #[Layout('components.layouts.app')] class extends Component {
         }
     }
 
+    public function getAvailableItemsProperty()
+    {
+        return $this->cart->items->filter(function ($item) {
+            return $item->product->hasStock($item->quantity);
+        });
+    }
+
+    public function getUnavailableItemsProperty()
+    {
+        return $this->cart->items->filter(function ($item) {
+            return !$item->product->hasStock($item->quantity);
+        });
+    }
+
+    public function getHasAvailableItemsProperty()
+    {
+        return $this->availableItems->isNotEmpty();
+    }
+
     private function priceService(): PriceCalculationService
     {
         return app(PriceCalculationService::class);
@@ -26,7 +45,7 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     private function pricing()
     {
-        return $this->priceService()->calculateOrderPricing($this->cart->items);
+        return $this->priceService()->calculateOrderPricing($this->availableItems);
     }
 
     public function placeOrder(): void
@@ -52,13 +71,27 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     <div class="grid gap-6 lg:grid-cols-3">
         <div class="lg:col-span-2 space-y-6">
+            @if($this->unavailableItems->isNotEmpty())
+                <flux:callout color="yellow" icon="exclamation-triangle">
+                    <strong>{{ $this->unavailableItems->count() }} item(s) are currently out of stock</strong> and will not be included in your order. Only available items will be processed.
+                </flux:callout>
+            @endif
+
             <flux:card>
                 <flux:heading size="lg" class="mb-4">Order Items</flux:heading>
 
                 <div class="space-y-4">
                     @foreach($cart->items as $item)
-                        <div class="flex gap-4 border-b border-zinc-200 pb-4 last:border-0 dark:border-zinc-700">
-                            <div class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800">
+                        @php
+                            $isOutOfStock = !$item->product->hasStock($item->quantity);
+                        @endphp
+                        <div class="flex gap-4 border-b border-zinc-200 pb-4 last:border-0 dark:border-zinc-700 {{ $isOutOfStock ? 'opacity-60 relative' : '' }}">
+                            @if($isOutOfStock)
+                                <div class="absolute top-0 right-0 z-10">
+                                    <flux:badge color="red" size="sm">Out of Stock - Will Not Be Included</flux:badge>
+                                </div>
+                            @endif
+                            <div class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800 {{ $isOutOfStock ? 'grayscale' : '' }}">
                                 @if($item->product->primary_image)
                                     <img 
                                         src="{{ $item->product->primary_image['url'] }}" 
@@ -70,11 +103,14 @@ new #[Layout('components.layouts.app')] class extends Component {
 
                             <div class="flex flex-1 justify-between">
                                 <div>
-                                    <flux:heading size="sm">{{ $item->product->name }}</flux:heading>
-                                    <flux:text class="mt-1 text-sm">Quantity: {{ $item->quantity }}</flux:text>
-                                    <flux:text class="mt-1 text-sm">{{ $this->priceService()->formatPrice($item->product->price) }} each</flux:text>
+                                    <flux:heading size="sm" class="{{ $isOutOfStock ? 'text-zinc-500 dark:text-zinc-600' : '' }}">{{ $item->product->name }}</flux:heading>
+                                    <flux:text class="mt-1 text-sm {{ $isOutOfStock ? 'text-zinc-400 dark:text-zinc-600' : '' }}">Quantity: {{ $item->quantity }}</flux:text>
+                                    <flux:text class="mt-1 text-sm {{ $isOutOfStock ? 'text-zinc-400 dark:text-zinc-600' : '' }}">{{ $this->priceService()->formatPrice($item->product->price) }} each</flux:text>
+                                    @if($isOutOfStock)
+                                        <flux:text class="mt-1 text-sm text-red-600 dark:text-red-400 font-medium">Currently unavailable</flux:text>
+                                    @endif
                                 </div>
-                                <flux:text class="font-bold">{{ $this->priceService()->formatPrice($item->getSubtotal()) }}</flux:text>
+                                <flux:text class="font-bold {{ $isOutOfStock ? 'text-zinc-400 dark:text-zinc-600 line-through' : '' }}">{{ $this->priceService()->formatPrice($item->getSubtotal()) }}</flux:text>
                             </div>
                         </div>
                     @endforeach
@@ -107,11 +143,18 @@ new #[Layout('components.layouts.app')] class extends Component {
                     <flux:text>{{ $this->priceService()->formatPrice($this->pricing()->total) }}</flux:text>
                 </div>
 
+                @if(!$this->hasAvailableItems)
+                    <flux:callout color="red" size="sm" class="mt-4">
+                        All items in your cart are currently out of stock. Please remove them or wait for restocking.
+                    </flux:callout>
+                @endif
+
                 <flux:button 
                     wire:click="placeOrder" 
                     variant="primary" 
                     class="mt-6 w-full"
                     wire:confirm="Are you sure you want to place this order?"
+                    :disabled="!$this->hasAvailableItems"
                 >
                     Place Order
                 </flux:button>

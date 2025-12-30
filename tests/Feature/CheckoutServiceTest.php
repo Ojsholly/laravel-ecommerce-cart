@@ -61,7 +61,7 @@ test('checkout creates product snapshot', function () {
         ->and($orderItem->price_snapshot)->toBe('50.00');
 });
 
-test('checkout clears cart', function () {
+test('checkout removes only purchased items from cart', function () {
     $product = Product::factory()->create(['stock_quantity' => 10]);
     $cart = $this->cartService->getOrCreateCart($this->user);
     $this->cartService->addProduct($cart, $product, 2);
@@ -95,7 +95,7 @@ test('checkout stores pricing breakdown', function () {
         ->and($order->pricing_breakdown)->toHaveKey('vat');
 });
 
-test('low stock notification dispatched', function () {
+test('low stock notification dispatched when crossing threshold', function () {
     Queue::fake();
     config(['cart.low_stock_threshold' => 5]);
     $product = Product::factory()->create(['stock_quantity' => 6]);
@@ -104,7 +104,19 @@ test('low stock notification dispatched', function () {
 
     $this->checkoutService->processCheckout($cart);
 
-    Queue::assertPushed(SendLowStockNotification::class);
+    Queue::assertPushed(SendLowStockNotification::class, 1);
+});
+
+test('low stock notification not dispatched when already below threshold', function () {
+    Queue::fake();
+    config(['cart.low_stock_threshold' => 5]);
+    $product = Product::factory()->create(['stock_quantity' => 4]);
+    $cart = $this->cartService->getOrCreateCart($this->user);
+    $this->cartService->addProduct($cart, $product, 1);
+
+    $this->checkoutService->processCheckout($cart);
+
+    Queue::assertNotPushed(SendLowStockNotification::class);
 });
 
 test('checkout with out of stock product throws exception', function () {
@@ -130,5 +142,7 @@ test('partial checkout with mixed stock', function () {
     $order = $this->checkoutService->processCheckout($cart);
 
     expect($order->items()->count())->toBe(1)
-        ->and($order->items->first()->product_id)->toBe($availableProduct->id);
+        ->and($order->items->first()->product_id)->toBe($availableProduct->id)
+        ->and($cart->fresh()->items()->count())->toBe(1)
+        ->and($cart->fresh()->items->first()->product_id)->toBe($unavailableProduct->id);
 });
