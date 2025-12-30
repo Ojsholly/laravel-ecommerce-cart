@@ -11,6 +11,7 @@ use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -19,9 +20,7 @@ use Illuminate\Support\Facades\DB;
 class CheckoutService
 {
     public function __construct(
-        private PriceCalculationService $priceCalculationService,
-        /** @phpstan-ignore property.onlyWritten */
-        private CartService $cartService
+        private PriceCalculationService $priceCalculationService
     ) {}
 
     /**
@@ -105,7 +104,7 @@ class CheckoutService
         ]);
     }
 
-    private function removeAvailableItemsFromCart(Cart $cart, \Illuminate\Support\Collection $availableItems): void
+    private function removeAvailableItemsFromCart(Cart $cart, Collection $availableItems): void
     {
         $availableItemIds = $availableItems->pluck('id');
         $cart->items()->whereIn('id', $availableItemIds)->delete();
