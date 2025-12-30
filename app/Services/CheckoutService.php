@@ -20,6 +20,7 @@ class CheckoutService
 {
     public function __construct(
         private PriceCalculationService $priceCalculationService,
+        /** @phpstan-ignore property.onlyWritten */
         private CartService $cartService
     ) {}
 
@@ -62,7 +63,7 @@ class CheckoutService
                 $this->decrementStock($item->product, $item->quantity);
             }
 
-            $this->cartService->clearCart($cart);
+            $this->removeAvailableItemsFromCart($cart, $availableItems);
 
             return $order;
         });
@@ -104,11 +105,22 @@ class CheckoutService
         ]);
     }
 
+    private function removeAvailableItemsFromCart(Cart $cart, \Illuminate\Support\Collection $availableItems): void
+    {
+        $availableItemIds = $availableItems->pluck('id');
+        $cart->items()->whereIn('id', $availableItemIds)->delete();
+    }
+
     private function decrementStock(Product $product, int $quantity): void
     {
+        $lowStockThreshold = config('cart.low_stock_threshold', 10);
+        $stockBeforeDecrement = $product->stock_quantity;
+
         $product->decrement('stock_quantity', $quantity);
 
-        if ($product->fresh()->isLowStock()) {
+        $stockAfterDecrement = $product->fresh()->stock_quantity;
+
+        if ($stockBeforeDecrement > $lowStockThreshold && $stockAfterDecrement <= $lowStockThreshold) {
             SendLowStockNotification::dispatch($product);
         }
     }

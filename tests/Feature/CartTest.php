@@ -23,7 +23,7 @@ test('cart page can be rendered', function () {
 test('cart page displays cart items', function () {
     $this->actingAs($this->user);
 
-    $product = Product::factory()->create(['name' => 'Test Product']);
+    $product = Product::factory()->create(['name' => 'Test Product', 'stock_quantity' => 10]);
     $cart = $this->cartService->getOrCreateCart($this->user);
     $this->cartService->addProduct($cart, $product, 2);
 
